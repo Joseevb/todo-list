@@ -4,15 +4,20 @@ import {
 	createUpdateSchema,
 } from "drizzle-zod";
 import { pgTable } from "drizzle-orm/pg-core";
+import { users } from "@/db/schemas/auth-schema";
 import z from "zod";
 
 export const todos = pgTable("todos", (t) => ({
 	id: t.uuid().primaryKey().defaultRandom(),
-	title: t.varchar({ length: 30 }),
-	description: t.text(),
-	completed: t.boolean().default(false),
+	title: t.varchar({ length: 30 }).notNull(),
+	description: t.text().notNull(),
+	completed: t.boolean().default(false).notNull(),
 	createdAt: t.timestamp().defaultNow(),
 	updatedAt: t.timestamp(),
+	userId: t
+		.text()
+		.references(() => users.id)
+		.notNull(),
 }));
 
 export const selectTodoSchema = createSelectSchema(todos);
