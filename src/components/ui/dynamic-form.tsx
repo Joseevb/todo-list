@@ -24,7 +24,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "./radio-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type InputType = NonNullable<InputHTMLAttributes<HTMLInputElement>["type"]>;
 
@@ -56,6 +56,75 @@ export type FieldConfig =
 
 export type FieldConfigs<T> = Record<keyof T, FieldConfig>;
 
+const createRenderMap = <T extends FieldValues>(
+	config: FieldConfig,
+	name: string,
+): Record<string, (field: ControllerRenderProps<T>) => JSX.Element> => ({
+	textarea: (field) => <Textarea placeholder={config.placeholder} {...field} />,
+	select: (field) => (
+		<Select onValueChange={field.onChange} defaultValue={field.value}>
+			<SelectTrigger>
+				<SelectValue placeholder={config.placeholder} />
+			</SelectTrigger>
+			<SelectContent>
+				{(config as SelectFieldConfig).options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
+	),
+	checkbox: (field) => (
+		<div className="flex items-center space-x-2">
+			<Checkbox
+				id={name}
+				checked={field.value}
+				onCheckedChange={field.onChange}
+			/>
+			<FormLabel
+				htmlFor={name}
+				className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+			>
+				{config.label}
+			</FormLabel>
+		</div>
+	),
+	radio: (field) => (
+		<RadioGroup
+			onValueChange={field.onChange}
+			defaultValue={field.value}
+			className={(config as RadioGroupConfig).className}
+		>
+			{(config as RadioGroupConfig).options.map(({ label, value }) => (
+				<FormItem key={value}>
+					<FormControl>
+						<RadioGroupItem value={value} />
+					</FormControl>
+					<FormLabel>{label}</FormLabel>
+				</FormItem>
+			))}
+		</RadioGroup>
+	),
+});
+
+const createRenderDefault =
+	<T extends FieldValues>(config: FieldConfig) =>
+	(field: ControllerRenderProps<T>) => (
+		<Input
+			placeholder={config.placeholder}
+			type={(config as InputFieldConfig).type}
+			{...field}
+			onChange={(e) => {
+				let value: unknown = e.target.value;
+				if (config.type === "number") {
+					value = e.target.value === "" ? 0 : Number(e.target.value);
+				}
+				field.onChange(value);
+			}}
+		/>
+	);
+
 interface DynamicFormFieldProps<T extends FieldValues> {
 	name: FieldPath<T>;
 	control: Control<T>;
@@ -71,79 +140,12 @@ export function DynamicFormField<T extends FieldValues>({
 	name,
 	control,
 	fieldConfigs,
-}: DynamicFormFieldProps<T>) {
+}: Readonly<DynamicFormFieldProps<T>>) {
 	const config = fieldConfigs[name as keyof typeof fieldConfigs];
 
-	const renderMap: Record<
-		string,
-		(field: ControllerRenderProps<T>) => JSX.Element
-	> = {
-		textarea: (field) => (
-			<Textarea placeholder={config.placeholder} {...field} />
-		),
-		select: (field) => (
-			<Select onValueChange={field.onChange} defaultValue={field.value}>
-				<SelectTrigger>
-					<SelectValue placeholder={config.placeholder} />
-				</SelectTrigger>
-				<SelectContent>
-					{(config as SelectFieldConfig).options.map((option) => (
-						<SelectItem key={option.value} value={option.value}>
-							{option.label}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
-		),
-		checkbox: (field) => (
-			<div className="flex items-center space-x-2">
-				<Checkbox
-					id={name}
-					checked={field.value}
-					onCheckedChange={field.onChange}
-				/>
-				<FormLabel
-					htmlFor={name}
-					className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-				>
-					{config.label}
-				</FormLabel>
-			</div>
-		),
-		radio: (field) => (
-			<RadioGroup
-				onValueChange={field.onChange}
-				defaultValue={field.value}
-				className={(config as RadioGroupConfig).className}
-			>
-				{(config as RadioGroupConfig).options.map(({ label, value }) => (
-					<FormItem key={value}>
-						<FormControl>
-							<RadioGroupItem value={value} />
-						</FormControl>
-						<FormLabel>{label}</FormLabel>
-					</FormItem>
-				))}
-			</RadioGroup>
-		),
-	};
+	const renderMap = createRenderMap<T>(config, name);
+	const renderDefault = createRenderDefault<T>(config);
 
-	const renderDefault = (field: ControllerRenderProps<T>) => (
-		<Input
-			placeholder={config.placeholder}
-			type={(config as InputFieldConfig).type}
-			{...field}
-			onChange={(e) => {
-				let value: unknown = e.target.value;
-				if (config.type === "number") {
-					value = e.target.value === "" ? 0 : Number(e.target.value);
-				}
-				field.onChange(value);
-			}}
-		/>
-	);
-
-	// Special handling for checkbox to avoid duplicate labels
 	if (config.type === "checkbox") {
 		return (
 			<FormField
@@ -181,7 +183,7 @@ export function DynamicFormField<T extends FieldValues>({
 export function DynamicFormGroup<T extends FieldValues>({
 	control,
 	fieldConfigs,
-}: DynamicFormGroupProps<T>) {
+}: Readonly<DynamicFormGroupProps<T>>) {
 	const orderedGroups: { groupName: string; fields: string[] }[] = [];
 	const seenGroups = new Set<string>();
 

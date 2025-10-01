@@ -21,8 +21,8 @@ export const todos = pgTable("todos", (t) => ({
 }));
 
 export const selectTodoSchema = createSelectSchema(todos);
-export const insertTodoSchema = createInsertSchema(todos).omit({ id: true });
-export const updateTodoSchema = createUpdateSchema(todos).omit({ id: true });
+export const insertTodoSchema = createInsertSchema(todos).omit({ id: true, createdAt: true, updatedAt: true });
+export const updateTodoSchema = createUpdateSchema(todos).omit({ id: true, createdAt: true, updatedAt: true });
 
 export type Todo = z.infer<typeof selectTodoSchema>;
 export type InsertTodo = z.infer<typeof insertTodoSchema>;

@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "@/app/globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { AppSidebar } from "@/components/providers/app-sidebar";
+import { QueryClientProvider } from "@/components/providers/query-client-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -26,11 +28,11 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<>
-			<html lang="en" suppressHydrationWarning>
-				<body
-					className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
-				>
+		<html lang="en" suppressHydrationWarning>
+			<body
+				className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
+			>
+				<QueryClientProvider>
 					<SidebarProvider className="bg-sidebar p-4 overflow-hidden h-dvh">
 						<AppSidebar />
 						<ThemeProvider
@@ -42,11 +44,12 @@ export default function RootLayout({
 							<main className="h-full min-h-dvh w-full flex flex-col bg-background overflow-hidden rounded-md relative">
 								<SidebarTrigger className="absolute top-4 left-4" />
 								{children}
+								<Toaster />
 							</main>
 						</ThemeProvider>
 					</SidebarProvider>
-				</body>
-			</html>
-		</>
+				</QueryClientProvider>
+			</body>
+		</html>
 	);
 }

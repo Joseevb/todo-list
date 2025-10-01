@@ -65,10 +65,7 @@ export default function SignIn() {
 				onError: (error) => setError(error.error.message),
 				onRequest: () => setIsLoading({ loading: true, type: "email" }),
 				onResponse: () => setIsLoading({ loading: false, type: "email" }),
-				onSuccess: async () => (
-					toast.success("Successfully signed in!"),
-					undefined
-				),
+				onSuccess: () => (toast.success("Successfully signed in!"), undefined),
 			},
 		});
 	}
@@ -120,8 +117,6 @@ export default function SignIn() {
 					</Link>
 				</CardFooter>
 			</Card>
-
-			<LegalDisclaimer />
 		</div>
 	);
 }

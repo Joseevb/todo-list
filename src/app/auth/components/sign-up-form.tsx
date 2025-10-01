@@ -24,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { IsLoading } from "../types";
 import LegalDisclaimer from "./legal-disclaimer";
 import SocialSignOn from "./social-sign-on";
+import { toast } from "sonner";
 
 const fieldConfigs: FieldConfigs<SignUpSchema> = {
 	firstName: {
@@ -88,6 +89,7 @@ export default function SignUp() {
 				onError: (error) => setError(error.error.message),
 				onRequest: () => setIsLoading({ loading: true, type: "email" }),
 				onResponse: () => setIsLoading({ loading: false, type: "email" }),
+				onSuccess: () => (toast.success("Successfully signed in!"), undefined),
 			},
 		});
 	}

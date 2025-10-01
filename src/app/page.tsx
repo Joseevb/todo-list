@@ -4,9 +4,9 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getTodos } from "@/app/actions";
 import Todo from "@/app/components/todo";
-import { CreateTodoDialog } from "@/components/create-todo-dialog";
-import { TodoHeader } from "@/components/todo-header";
+import { TodoHeader } from "@/app/components/todo-header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CreateTodoForm } from "@/app/components/create-todo-form";
 
 export default async function Home() {
 	const session = await auth.api.getSession({
@@ -30,14 +30,15 @@ export default async function Home() {
 						) : (
 							<Alert className="w-full">
 								<AlertDescription>
-									You have no todos yet. Create one by clicking the &ldquo;New Todo&rdquo; button.
+									You have no todos yet. Create one by clicking the &ldquo;New
+									Todo&rdquo; button.
 								</AlertDescription>
 							</Alert>
 						)}
 					</section>
 				</div>
 			</div>
-			<CreateTodoDialog />
+			<CreateTodoForm />
 		</div>
 	);
 }

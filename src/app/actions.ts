@@ -5,38 +5,40 @@ import {
 import { Effect } from "effect";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { insertTodoSchema } from "@/db/schemas/todo-schema";
+import {
+	createTodoSchema,
+	CreateTodoSchema,
+} from "./schemas/create-todo-schema";
 
 export const getTodos = Effect.gen(function* () {
 	const repo = yield* TodoRepository;
 	return yield* repo.getTodos;
 }).pipe(Effect.provide(TodoRepositoryLive));
 
-export const createTodo = async (formData: FormData) => {
+export const createTodo = async (data: CreateTodoSchema) => {
 	const session = await auth.api.getSession({
 		headers: await headers(),
 	});
 
 	if (!session) {
-		redirect("/auth");
+		throw new Error("Authentication required");
 	}
 
-	const title = formData.get("title") as string;
-	const description = formData.get("description") as string;
+	// Validate the input data
+	const validatedInput = createTodoSchema.parse(data);
 
+	// Prepare data for database insertion
 	const validatedData = insertTodoSchema.parse({
-		title,
-		description,
+		title: validatedInput.title,
+		description: validatedInput.description,
 		userId: session.user.id,
 	});
 
-	await Effect.runPromise(
+	return await Effect.runPromise(
 		Effect.gen(function* () {
 			const repo = yield* TodoRepository;
 			return yield* repo.insertTodo(validatedData);
-		}).pipe(Effect.provide(TodoRepositoryLive))
+		}).pipe(Effect.provide(TodoRepositoryLive)),
 	);
-
-	redirect("/");
 };
